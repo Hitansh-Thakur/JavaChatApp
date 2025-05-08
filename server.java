@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
@@ -13,11 +14,11 @@ class ConnectionHandler extends Thread {
     static ServerSocket ServerSoc;
     Socket ClientSoc;
 
-    ConnectionHandler(Socket ClientSoc,String Username) {
+    ConnectionHandler(Socket ClientSoc, String Username) {
         try {
             this.ClientSoc = ClientSoc;
             DataOutputStream clientout = new DataOutputStream(ClientSoc.getOutputStream());
-            clients.put(Username,clientout);
+            clients.put(Username, clientout);
         } catch (Exception e) {
         }
     }
@@ -28,9 +29,10 @@ class ConnectionHandler extends Thread {
                 DataOutputStream out = new DataOutputStream(ClientSoc.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(ClientSoc.getInputStream());) {
 
-            // System.out.println("Client connected with " + Thread.currentThread().getName());
+            // System.out.println("Client connected with " +
+            // Thread.currentThread().getName());
             out.writeUTF(getName());
-            
+
             // Wait
             // Deserialize the trasmitted obj form Bytes to Obj of type MsgPacket.
             MsgPacket msg = (MsgPacket) in.readObject();
@@ -63,13 +65,24 @@ public class server {
             while (true) {
                 Socket Client = ServerSoc.accept();
                 System.out.println("Client Connected!");
-                DataInputStream in = new DataInputStream(Client.getInputStream());
-                String username = in.readUTF();
-            
-                System.out.println(username + "Connected!");
-                ConnectionHandler ch = new ConnectionHandler(Client,username);
-                // clients.add(ch);
-                ch.start();
+
+                try (
+                        ObjectInputStream in = new ObjectInputStream(Client.getInputStream());
+                        ObjectOutputStream out = new ObjectOutputStream(Client.getOutputStream());) {
+                    // Waiting for the username to be sent by the client
+                    // out.writeObject("server 1");
+                    // out.flush();
+                    String username = (String) in.readObject();
+                    out.writeObject(username + " Connected!");
+                    System.out.println(username + " Connected!");
+                    ConnectionHandler ch = new ConnectionHandler(Client, username);
+                    ch.start();
+                } catch (IOException e) {
+                    System.err.println("Error reading username from socket: " + e.getMessage());
+                    continue; // Skip to the next iteration if username cannot be read
+                } catch (Exception e) {
+                    System.err.println("Error starting ConnectionHandler thread: " + e.getMessage());
+                }
 
             }
         } catch (Exception e) {
