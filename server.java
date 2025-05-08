@@ -67,8 +67,8 @@ public class server {
                 System.out.println("Client Connected!");
 
                 try (
-                        ObjectInputStream in = new ObjectInputStream(Client.getInputStream());
                         ObjectOutputStream out = new ObjectOutputStream(Client.getOutputStream());) {
+                    ObjectInputStream in = new ObjectInputStream(Client.getInputStream());
                     // Waiting for the username to be sent by the client
                     // out.writeObject("server 1");
                     // out.flush();
