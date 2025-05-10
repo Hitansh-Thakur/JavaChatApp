@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -40,22 +39,20 @@ public class client extends Thread{
     public void run(){
         try{
             while(true)
-                System.out.println("Reading from server: " +(String)in.readObject());
-            // System.out.println();
-
+                System.out.println("\nReading from server: " +(String)in.readObject());
         }catch(Exception e){
             System.err.println("Err in reading form server: " + e);
+            System.exit(1);
         }
     }
     public static void main(String[] args) {
         int port = 3000;
         Scanner sc = new Scanner(System.in);
-        String userName, msg;
+        String userName, msg,recepient="";
         // userName="hitansh";
         System.out.println("Enter your username.");
         userName = sc.nextLine();
 
-        System.out.println("socket");
         try {
                 Socket socket = new Socket("localhost", port);
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -64,18 +61,18 @@ public class client extends Thread{
                     
             socket.setKeepAlive(true);
 
-            System.out.println("Socket closed"+socket.isClosed());
-            // System.out.println((String) in.readObject());
             out.writeObject(userName);
             out.flush(); 
-            System.out.println("sent username" + userName);
+            System.out.println("Enter Recipient:");
+            recepient = sc.nextLine();
             System.out.println("Server: " + (String)in.readObject());
             client c= new client();
             c.start();
             while (true) {
-                System.out.println("Enter your Msg.");
+                System.out.println("Enter your Msg:");
                 msg = sc.nextLine();
-                MsgPacket packet = new MsgPacket(userName, msg, "yash");
+                MsgPacket packet = new MsgPacket(userName, msg, recepient);
+                // send the serialized object to server
                 out.writeObject(packet);
             }
             

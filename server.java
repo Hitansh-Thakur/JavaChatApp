@@ -32,22 +32,14 @@ class ClientThread extends Thread {
     @Override
     public void run() {
         try {
-            // synchronized (ClientSoc) {
-            // clientOut = new ObjectOutputStream(ClientSoc.getOutputStream());
-            // clientOut.flush();
-            // clientIn = new ObjectInputStream(ClientSoc.getInputStream());
-            // }
-            // System.out.println("in run meth\nSocket closed: " + ClientSoc.isClosed());
-            // Wait
-            // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
-            MsgPacket msg = (MsgPacket) clientIn.readObject();
-            System.out.println(msg);
-            clientOut.writeObject("Message sent");
+            MsgPacket msg;
             while (true) {
+                // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
+                msg = (MsgPacket) clientIn.readObject();
+                System.out.println(msg);
                 System.out.println("REcipent from hashmap: " +
                         clients.get(msg.getRecepient()));
                 System.out.println(clients.entrySet());
-                msg = (MsgPacket) clientIn.readObject();
                 if (clients.containsKey(msg.getRecepient())) {
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
                     recipientout.writeObject(msg.getMsg());
@@ -91,7 +83,6 @@ class ConnectionHandler {
             ct.start();
         } catch (IOException e) {
             System.err.println("Error reading username from socket: " + e.getMessage());
-            // continue; // Skip to the next iteration if username cannot be read
         } catch (Exception e) {
             System.err.println("Error starting ClientThread thread: " + e.getMessage());
 
@@ -102,12 +93,10 @@ class ConnectionHandler {
 
 public class server {
     public static void main(String[] args) {
-        // ArrayList<ClientThread> clients = new ArrayList<>();
         try (ServerSocket ServerSoc = new ServerSocket(3000);) {
             System.out.println("Server Listening on port 3000.");
             while (true) {
                 Socket Client = ServerSoc.accept();
-                // System.out.println("Client Connected!");
                 Client.setKeepAlive(true);
                 ConnectionHandler ch = new ConnectionHandler(Client);
                 ch.connect();
