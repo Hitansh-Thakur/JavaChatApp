@@ -1,93 +1,119 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
-class ConnectionHandler extends Thread {
+class ClientThread extends Thread {
     // private int port = 3000;
-    static Map<String, DataOutputStream> clients = new HashMap<>();
+    static Map<String, ObjectOutputStream> clients = new HashMap<>();
 
-    static ServerSocket ServerSoc;
+    // static ServerSocket ServerSoc;
     Socket ClientSoc;
+    String Username;
+    ObjectOutputStream clientOut;
+    ObjectInputStream clientIn;
 
-    ConnectionHandler(Socket ClientSoc, String Username) {
+    ClientThread(Socket ClientSoc, ObjectOutputStream out, ObjectInputStream in, String Username) {
         try {
             this.ClientSoc = ClientSoc;
-            DataOutputStream clientout = new DataOutputStream(ClientSoc.getOutputStream());
-            clients.put(Username, clientout);
+            clientOut = out;
+            clientOut.flush();
+            clientIn = in;
+            this.Username = Username;
+            clients.put(Username, out);
         } catch (Exception e) {
+            System.err.println("Error in constructor : " + e);
         }
     }
 
     @Override
     public void run() {
-        try (
-                DataOutputStream out = new DataOutputStream(ClientSoc.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(ClientSoc.getInputStream());) {
-
-            // System.out.println("Client connected with " +
-            // Thread.currentThread().getName());
-            out.writeUTF(getName());
-
+        try {
+            // synchronized (ClientSoc) {
+            // clientOut = new ObjectOutputStream(ClientSoc.getOutputStream());
+            // clientOut.flush();
+            // clientIn = new ObjectInputStream(ClientSoc.getInputStream());
+            // }
+            // System.out.println("in run meth\nSocket closed: " + ClientSoc.isClosed());
             // Wait
-            // Deserialize the trasmitted obj form Bytes to Obj of type MsgPacket.
-            MsgPacket msg = (MsgPacket) in.readObject();
-            System.out.println(msg.getUsername() + " connected!");
-            // clients.put(msg.getUsername(), out);
-            // out.writeUTF("msg received!");
+            // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
+            MsgPacket msg = (MsgPacket) clientIn.readObject();
+            System.out.println(msg);
+            clientOut.writeObject("Message sent");
             while (true) {
-                System.out.println("REcipent from hashmap: " + clients.get(msg.getRecepient()));
-                msg = (MsgPacket) in.readObject();
+                System.out.println("REcipent from hashmap: " +
+                        clients.get(msg.getRecepient()));
+                System.out.println(clients.entrySet());
+                msg = (MsgPacket) clientIn.readObject();
                 if (clients.containsKey(msg.getRecepient())) {
-                    DataOutputStream outTO = new DataOutputStream(clients.get(msg.getRecepient()));
-                    outTO.writeUTF(msg.getMsg());
-                    // outTO.close();
+                    ObjectOutputStream recipientout = clients.get(msg.getRecepient());
+                    recipientout.writeObject(msg.getMsg());
                 } else {
-                    out.writeUTF("Invalid Recipient");
+                    clientOut.writeObject("Invalid Recipient");
                 }
                 System.out.println(msg);
             }
+
+        } catch (StreamCorruptedException e) {
+            System.err
+                    .println("Error in Client thread: " + "\nCause: " + e.getCause() + "\nMessage: " + e.getMessage());
+            e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Server : Error in Thread run " + e);
         }
     }
 }
 
+class ConnectionHandler {
+    Socket Client;
+    ObjectOutputStream out;
+    ObjectInputStream in;
+
+    ConnectionHandler(Socket Client) {
+        this.Client = Client;
+    }
+
+    public void connect() {
+
+        try {
+            out = new ObjectOutputStream(Client.getOutputStream());
+            in = new ObjectInputStream(Client.getInputStream());
+            out.flush();
+
+            String username = (String) in.readObject();
+            out.writeObject(username + " Connected!");
+            System.out.println(username + " Connected!");
+            Client.setKeepAlive(true);
+            ClientThread ct = new ClientThread(Client, out, in, username);
+            ct.start();
+        } catch (IOException e) {
+            System.err.println("Error reading username from socket: " + e.getMessage());
+            // continue; // Skip to the next iteration if username cannot be read
+        } catch (Exception e) {
+            System.err.println("Error starting ClientThread thread: " + e.getMessage());
+
+        }
+
+    }
+}
+
 public class server {
     public static void main(String[] args) {
-        // ArrayList<ConnectionHandler> clients = new ArrayList<>();
+        // ArrayList<ClientThread> clients = new ArrayList<>();
         try (ServerSocket ServerSoc = new ServerSocket(3000);) {
             System.out.println("Server Listening on port 3000.");
             while (true) {
                 Socket Client = ServerSoc.accept();
-                System.out.println("Client Connected!");
-
-                try (
-                        ObjectOutputStream out = new ObjectOutputStream(Client.getOutputStream());) {
-                    ObjectInputStream in = new ObjectInputStream(Client.getInputStream());
-                    // Waiting for the username to be sent by the client
-                    // out.writeObject("server 1");
-                    // out.flush();
-                    String username = (String) in.readObject();
-                    out.writeObject(username + " Connected!");
-                    System.out.println(username + " Connected!");
-                    ConnectionHandler ch = new ConnectionHandler(Client, username);
-                    ch.start();
-                } catch (IOException e) {
-                    System.err.println("Error reading username from socket: " + e.getMessage());
-                    continue; // Skip to the next iteration if username cannot be read
-                } catch (Exception e) {
-                    System.err.println("Error starting ConnectionHandler thread: " + e.getMessage());
-                }
-
+                // System.out.println("Client Connected!");
+                Client.setKeepAlive(true);
+                ConnectionHandler ch = new ConnectionHandler(Client);
+                ch.connect();
             }
         } catch (Exception e) {
-            System.err.println("Error in creating server Socket." + e);
-
+            System.out.println("Error in Main" + e);
         }
 
     }

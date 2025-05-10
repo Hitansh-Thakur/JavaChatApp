@@ -1,5 +1,4 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -31,51 +30,55 @@ class MsgPacket implements Serializable {
 
     @Override
     public String toString() {
-        return username + " : " + msg;
+        return username + " says " + msg + " to " + recepient;
     }
 }
 
-public class client {
+public class client extends Thread{
+    static ObjectInputStream in;
+    @Override
+    public void run(){
+        try{
+            while(true)
+                System.out.println("Reading from server: " +(String)in.readObject());
+            // System.out.println();
+
+        }catch(Exception e){
+            System.err.println("Err in reading form server: " + e);
+        }
+    }
     public static void main(String[] args) {
         int port = 3000;
         Scanner sc = new Scanner(System.in);
         String userName, msg;
-        userName="hitansh";
-        // System.out.println("Enter your username.");
-        // userName = sc.nextLine();
+        // userName="hitansh";
+        System.out.println("Enter your username.");
+        userName = sc.nextLine();
 
         System.out.println("socket");
-        try (
+        try {
                 Socket socket = new Socket("localhost", port);
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())) {
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                // DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                out.flush();
+                in = new ObjectInputStream(socket.getInputStream());
                     
             socket.setKeepAlive(true);
 
             System.out.println("Socket closed"+socket.isClosed());
             // System.out.println((String) in.readObject());
             out.writeObject(userName);
-            out.flush();
+            out.flush(); 
             System.out.println("sent username" + userName);
             System.out.println("Server: " + (String)in.readObject());
-
+            client c= new client();
+            c.start();
             while (true) {
-                // if (in.read() == -1) {
-                // System.out.println("Server closed");
-
-                // } else {
-                // System.out.println("Server: " + in.readUTF());
-                // }
                 System.out.println("Enter your Msg.");
                 msg = sc.nextLine();
                 MsgPacket packet = new MsgPacket(userName, msg, "yash");
                 out.writeObject(packet);
-                System.out.println("bef while");
-                System.out.println("Reading from server");
-                System.out.println((String)in.readObject());
-
             }
+            
         } catch (Exception e) {
             System.err.println("Error in Client" + e);
         } finally {
