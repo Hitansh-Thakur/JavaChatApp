@@ -37,9 +37,9 @@ class ClientThread extends Thread {
                 // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
                 msg = (MsgPacket) clientIn.readObject();
                 System.out.println(msg);
-                System.out.println("REcipent from hashmap: " +
-                        clients.get(msg.getRecepient()));
-                System.out.println(clients.entrySet());
+                // System.out.println("REcipent from hashmap: " +
+                //         clients.get(msg.getRecepient()));
+                // System.out.println(clients.entrySet());
                 if (clients.containsKey(msg.getRecepient())) {
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
                     recipientout.writeObject(msg.getMsg());
@@ -51,7 +51,7 @@ class ClientThread extends Thread {
 
         } catch (StreamCorruptedException e) {
             System.err
-                    .println("Error in Client thread: " + "\nCause: " + e.getCause() + "\nMessage: " + e.getMessage());
+                    .printf("Error in Client thread: %s \nCause: %s\nMessage: %s", e, e.getCause(), e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Server : Error in Thread run " + e);
@@ -92,9 +92,11 @@ class ConnectionHandler {
 }
 
 public class server {
+    static final int port = 3000;
+
     public static void main(String[] args) {
-        try (ServerSocket ServerSoc = new ServerSocket(3000);) {
-            System.out.println("Server Listening on port 3000.");
+        try (ServerSocket ServerSoc = new ServerSocket(port);) {
+            System.out.printf("Server Listening on port %d.\n", port);
             while (true) {
                 Socket Client = ServerSoc.accept();
                 Client.setKeepAlive(true);
@@ -104,6 +106,5 @@ public class server {
         } catch (Exception e) {
             System.out.println("Error in Main" + e);
         }
-
     }
 }
