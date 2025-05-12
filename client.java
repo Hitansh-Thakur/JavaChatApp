@@ -1,37 +1,7 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.Socket;
 import java.util.Scanner;
-
-class MsgPacket implements Serializable {
-    private String username;
-    private String recepient;
-    private String msg;
-
-    MsgPacket(String username, String msg, String recepient) {
-        this.username = username;
-        this.msg = msg;
-        this.recepient = recepient;
-    }
-
-    String getUsername() {
-        return username;
-    }
-
-    String getMsg() {
-        return msg;
-    }
-
-    String getRecepient() {
-        return recepient;
-    }
-
-    @Override
-    public String toString() {
-        return username + " says " + msg + " to " + recepient;
-    }
-}
 
 public class client extends Thread{
     static ObjectInputStream in;
