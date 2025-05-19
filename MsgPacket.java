@@ -1,10 +1,12 @@
 
 import java.io.Serializable;
+import java.io.File;
 
 public class MsgPacket implements Serializable {
     private String username;
     private String recepient;
     private String msg;
+    private File file= null;
 
     MsgPacket(String username, String msg, String recepient) {
         this.username = username;
@@ -12,15 +14,24 @@ public class MsgPacket implements Serializable {
         this.recepient = recepient;
     }
 
-    String getUsername() {
+
+    void SetFile(String fName){
+        this.file= new File(fName);
+    }
+    public File getFile(){
+        return this.file;
+    }
+
+
+    public String getUsername() {
         return username;
     }
 
-    String getMsg() {
+    public String getMsg() {
         return msg;
     }
 
-    String getRecepient() {
+    public String getRecepient() {
         return recepient;
     }
 

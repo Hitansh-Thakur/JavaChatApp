@@ -1,13 +1,9 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.StreamCorruptedException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
 class ClientThread extends Thread {
-    // private int port = 3000;
     static Map<String, ObjectOutputStream> clients = new HashMap<>();
 
     // static ServerSocket ServerSoc;
@@ -37,12 +33,21 @@ class ClientThread extends Thread {
                 // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
                 msg = (MsgPacket) clientIn.readObject();
                 System.out.println(msg);
-                // System.out.println("REcipent from hashmap: " +
-                //         clients.get(msg.getRecepient()));
-                // System.out.println(clients.entrySet());
                 if (clients.containsKey(msg.getRecepient())) {
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
-                    recipientout.writeObject(msg.getMsg());
+                    recipientout.writeObject(msg.getUsername() + " : " + msg.getMsg());
+                    if (msg.getFile() != null) {
+                        FileInputStream fin = new FileInputStream(msg.getFile());
+                        BufferedInputStream bin = new BufferedInputStream(fin);
+                        File saveFile = new File("received/received_" + msg.getMsg());
+                        FileOutputStream fout = new FileOutputStream(saveFile);
+                        int i;
+                        while ((i = bin.read()) != -1) {
+                            // System.err.print((char) i);
+                            fout.write(i);
+                        }
+                        recipientout.writeObject(msg.getMsg() + " file Downloaded.");
+                    }
                 } else {
                     clientOut.writeObject("Invalid Recipient");
                 }
