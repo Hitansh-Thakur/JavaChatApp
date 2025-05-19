@@ -2,8 +2,13 @@
 *.out
 **/*.class
 tempcoderunner.*
+*.txt
 
 /Screenshots
+/received
+
+
+*.mp4
 *.png
 *.jpg
 *.jpeg

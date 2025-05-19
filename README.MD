@@ -22,9 +22,9 @@
     - [x] add a new thread for each client.
     - [x] store username and out streams in a map.
 
-- [ ] support to send files over the network.
-    - [ ] add a new command to send files.
-    - [ ] add a new command to receive files.
+- [x] support to send files over the network.
 
 - [ ] add a database to store user credentials and messages.
+- [ ] add user authentication.
+- [ ] add encryption to the messages.
 - [ ] add a GUI to the client.
