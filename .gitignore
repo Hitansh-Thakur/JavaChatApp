@@ -2,6 +2,7 @@
 *.out
 **/*.class
 tempcoderunner.*
+.vscode
 *.txt
 
 /Screenshots
@@ -12,3 +13,10 @@ tempcoderunner.*
 *.png
 *.jpg
 *.jpeg
+
+.env
+
+# maven
+target/
+
+

@@ -1,7 +1,10 @@
+package chatapp;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+
 
 class ClientThread extends Thread {
     static Map<String, ObjectOutputStream> clients = new HashMap<>();
@@ -32,10 +35,13 @@ class ClientThread extends Thread {
             while (true) {
                 // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
                 msg = (MsgPacket) clientIn.readObject();
+                //TODO: Save to DB
                 System.out.println(msg);
                 if (clients.containsKey(msg.getRecepient())) {
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
                     recipientout.writeObject(msg.getUsername() + " : " + msg.getMsg());
+                    
+                    // handling file send
                     if (msg.getFile() != null) {
                         FileInputStream fin = new FileInputStream(msg.getFile());
                         BufferedInputStream bin = new BufferedInputStream(fin);
@@ -48,6 +54,7 @@ class ClientThread extends Thread {
                         }
                         recipientout.writeObject(msg.getMsg() + " file Downloaded.");
                     }
+
                 } else {
                     clientOut.writeObject("Invalid Recipient");
                 }
@@ -96,7 +103,7 @@ class ConnectionHandler {
     }
 }
 
-public class server {
+public class Main {
     static final int port = 3000;
 
     public static void main(String[] args) {
