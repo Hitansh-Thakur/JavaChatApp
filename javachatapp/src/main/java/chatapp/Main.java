@@ -5,6 +5,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+
+
 
 class ClientThread extends Thread {
     static Map<String, ObjectOutputStream> clients = new HashMap<>();
@@ -35,8 +39,9 @@ class ClientThread extends Thread {
             while (true) {
                 // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
                 msg = (MsgPacket) clientIn.readObject();
-                //TODO: Save to DB
                 System.out.println(msg);
+
+                
                 if (clients.containsKey(msg.getRecepient())) {
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
                     recipientout.writeObject(msg.getUsername() + " : " + msg.getMsg());
@@ -53,8 +58,16 @@ class ClientThread extends Thread {
                             fout.write(i);
                         }
                         recipientout.writeObject(msg.getMsg() + " file Downloaded.");
+                        
                     }
+                    //TODO: Save to DB
 
+                    DBConnect dbc = new DBConnect();
+                    dbc.start();
+                    dbc.join();
+                    MongoDatabase db = dbc.getDb();
+                    MongoCollection<MsgPacket> chats = db.getCollection("chats",MsgPacket.class);
+                    chats.insertOne(msg);
                 } else {
                     clientOut.writeObject("Invalid Recipient");
                 }
@@ -67,6 +80,7 @@ class ClientThread extends Thread {
             e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Server : Error in Thread run " + e);
+            e.printStackTrace();
         }
     }
 }

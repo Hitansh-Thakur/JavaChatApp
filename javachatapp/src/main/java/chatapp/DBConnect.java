@@ -29,7 +29,7 @@ public class DBConnect extends Thread {
         Dotenv dotenv = Dotenv.load();
         String connectionString = dotenv.get("CONNECTION_URI");
         ConnectionString = new ConnectionString(connectionString);
-        DBName = "abc";
+        DBName = "JavaChatDB";
     }
 
     public void run() {
@@ -67,9 +67,10 @@ public class DBConnect extends Thread {
 
     MongoDatabase getDb() {
         if (!isConnected) {
-            System.err.println("DB is not connected.");
+            System.err.println("\nDB is not connected.");
             return null;
         }
+        System.out.println("\nConnected to : " + db.getName());
         return db;
     }
 
