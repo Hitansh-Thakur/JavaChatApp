@@ -51,7 +51,11 @@ public class client extends Thread {
                 choice = sc.nextLine();
                 MsgPacket packet;
                 if (choice.equals("y") || choice.equals("yes")) {
-
+                    File dir = new File("./");
+                    File [] files = dir.listFiles();
+                    for(File f:files){
+                        System.out.println("- " + f);
+                    }
                     System.out.println("Enter File Name:");
                     msg = sc.nextLine();
 

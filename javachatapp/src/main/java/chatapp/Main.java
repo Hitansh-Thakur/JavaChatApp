@@ -8,8 +8,6 @@ import java.util.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-
-
 class ClientThread extends Thread {
     static Map<String, ObjectOutputStream> clients = new HashMap<>();
 
@@ -35,17 +33,17 @@ class ClientThread extends Thread {
     @Override
     public void run() {
         try {
+            Thread.currentThread().setName("Client Thread : " + Username);
             MsgPacket msg;
             while (true) {
                 // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
                 msg = (MsgPacket) clientIn.readObject();
-                System.out.println(msg);
-
                 
                 if (clients.containsKey(msg.getRecepient())) {
+                    System.out.println(msg);
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
                     recipientout.writeObject(msg.getUsername() + " : " + msg.getMsg());
-                    
+
                     // handling file send
                     if (msg.getFile() != null) {
                         FileInputStream fin = new FileInputStream(msg.getFile());
@@ -58,20 +56,19 @@ class ClientThread extends Thread {
                             fout.write(i);
                         }
                         recipientout.writeObject(msg.getMsg() + " file Downloaded.");
-                        
+
                     }
-                    //TODO: Save to DB
+                    // TODO: Save to DB
 
                     DBConnect dbc = new DBConnect();
                     dbc.start();
                     dbc.join();
                     MongoDatabase db = dbc.getDb();
-                    MongoCollection<MsgPacket> chats = db.getCollection("chats",MsgPacket.class);
+                    MongoCollection<MsgPacket> chats = db.getCollection("chats", MsgPacket.class);
                     chats.insertOne(msg);
                 } else {
                     clientOut.writeObject("Invalid Recipient");
                 }
-                System.out.println(msg);
             }
 
         } catch (StreamCorruptedException e) {
