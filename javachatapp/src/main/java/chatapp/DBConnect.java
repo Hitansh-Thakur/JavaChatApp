@@ -79,9 +79,9 @@ public class DBConnect extends Thread {
     // col.insertOne(msg);
     // }
 
-    public static void main(String[] args) {
-        DBConnect dbc = new DBConnect();
-        dbc.start();
-    }
+    // public static void main(String[] args) {
+    //     DBConnect dbc = new DBConnect();
+    //     dbc.start();
+    // }
 
 }

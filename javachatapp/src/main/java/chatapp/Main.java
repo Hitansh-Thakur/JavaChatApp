@@ -3,10 +3,8 @@ package chatapp;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
-
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
 class ClientThread extends Thread {
     static Map<String, ObjectOutputStream> clients = new HashMap<>();
@@ -35,10 +33,14 @@ class ClientThread extends Thread {
         try {
             Thread.currentThread().setName("Client Thread : " + Username);
             MsgPacket msg;
+            DBHandler handler = new DBHandler();
+
             while (true) {
                 // Deserialize the transmitted obj from Bytes to Obj of type MsgPacket.
                 msg = (MsgPacket) clientIn.readObject();
-                
+
+                // TODO: Instead of statically saving online client fetch clients form DB
+                // a single clinet can send msg and other will read when online
                 if (clients.containsKey(msg.getRecepient())) {
                     System.out.println(msg);
                     ObjectOutputStream recipientout = clients.get(msg.getRecepient());
@@ -60,12 +62,8 @@ class ClientThread extends Thread {
                     }
                     // TODO: Save to DB
 
-                    DBConnect dbc = new DBConnect();
-                    dbc.start();
-                    dbc.join();
-                    MongoDatabase db = dbc.getDb();
-                    MongoCollection<MsgPacket> chats = db.getCollection("chats", MsgPacket.class);
-                    chats.insertOne(msg);
+                    handler.saveChats(msg);
+
                 } else {
                     clientOut.writeObject("Invalid Recipient");
                 }
@@ -75,6 +73,8 @@ class ClientThread extends Thread {
             System.err
                     .printf("Error in Client thread: %s \nCause: %s\nMessage: %s", e, e.getCause(), e.getMessage());
             e.printStackTrace();
+        } catch (SocketException e) {
+            System.out.println("Client disconnected : " + Username);
         } catch (Exception e) {
             System.err.println("Server : Error in Thread run " + e);
             e.printStackTrace();
